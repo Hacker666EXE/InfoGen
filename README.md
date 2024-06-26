@@ -31,3 +31,5 @@ A interface é intuitiva, com seções para cada tipo de documento. Os resultado
 - JavaScript para a lógica de geração dos documentos.
 
 Ideal para desenvolvedores que precisam de dados reais para testes de software e outras aplicações.
+
+![InfoGen](InfoGen.png)
