@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>InfoGen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 40px;
+        }
+        .generator {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input[type="checkbox"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>InfoGen</h1>
+    <div class="generator">
+        <h2>Gerador Credit Card</h2>
+        <label for="cardBrand">Marca:</label>
+        <select id="cardBrand">
+            <option value="VISA">VISA</option>
+            <option value="MASTERCARD">MasterCard</option>
+            <option value="AMEX">American Express</option>
+        </select>
+        <button onclick="generateCreditCard()">Gerar</button>
+        <div id="cardOutput" class="output"></div>
+    </div>
+    <div class="generator">
+        <h2>Gerador CPF</h2>
+        <label for="cpfMasked">Masked:</label>
+        <input type="checkbox" id="cpfMasked">
+        <button onclick="generateCPF()">Gerar</button>
+        <div id="cpfOutput" class="output"></div>
+    </div>
+    <div class="generator">
+        <h2>Gerador CNPJ</h2>
+        <label for="cnpjMasked">Masked:</label>
+        <input type="checkbox" id="cnpjMasked">
+        <button onclick="generateCNPJ()">Gerar</button>
+        <div id="cnpjOutput" class="output"></div>
+    </div>
+    <div class="generator">
+        <h2>Gerador RG</h2>
+        <label for="rgMasked">Masked:</label>
+        <input type="checkbox" id="rgMasked">
+        <button onclick="generateRG()">Gerar</button>
+        <div id="rgOutput" class="output"></div>
+    </div>
+    <script>
+        const CreditCardBrand = {
+            VISA: 'VISA',
+            MASTERCARD: 'MASTERCARD',
+            AMEX: 'AMEX'
+        };
+
+        const DocumentType = {
+            CPF: 'CPF',
+            CNPJ: 'CNPJ',
+            RG: 'RG'
+        };
+
+        const onGenerateCreditCard = (brand) => {
+            let number = generateCardNumber(brand);
+            while (!luhnCheck(number)) {
+                number = generateCardNumber(brand);
+            }
+            return {
+                number,
+                expirity: getRamdomDateInBetween(),
+                cvv: String(Math.floor(Math.random() * (999 - 100)) + 100),
+                brand,
+            };
+        };
+
+        const generateCardNumber = (brand) => {
+            let bin, numberLength;
+            switch (brand) {
+                case CreditCardBrand.AMEX:
+                    bin = ['34', '37'].sort(() => 0.5 - Math.random())[0];
+                    numberLength = 15;
+                    break;
+                case CreditCardBrand.MASTERCARD:
+                    bin = ['51', '55'].sort(() => 0.5 - Math.random())[0];
+                    numberLength = 16;
+                    break;
+                case CreditCardBrand.VISA:
+                    bin = '4';
+                    numberLength = 16;
+                    break;
+                default:
+                    bin = '55';
+                    numberLength = 16;
+            }
+            let cardNumber = bin;
+            let randomNumberLength = numberLength - (bin.length + 1);
+            for (let i = 0; i < randomNumberLength; i++) {
+                let digit = Math.floor(Math.random() * 9 + 0);
+                cardNumber += digit;
+            }
+            let checkDigit = getCheckDigit(cardNumber);
+            cardNumber += String(checkDigit);
+            return cardNumber;
+        };
+
+        const getCheckDigit = (number) => {
+            let sum = 0, module, checkDigit;
+            for (let i = 0; i < number.length; i++) {
+                let digit = parseInt(number.substring(i, i + 1));
+                if (i % 2 === 0) {
+                    digit = digit * 2;
+                    if (digit > 9) {
+                        digit = digit / 10 + (digit % 10);
+                    }
+                }
+                sum += digit;
+            }
+            module = parseInt(String(sum)) % 10;
+            checkDigit = module === 0 ? 0 : 10 - module;
+            return checkDigit;
+        };
+
+        const luhnCheck = (num) => {
+            let arr = (num + '').split('').reverse().map((x) => parseInt(x));
+            let lastDigit = arr.splice(0, 1)[0];
+            let sum = arr.reduce((acc, val, i) => (i % 2 !== 0 ? acc + val : acc + ((val * 2) % 9) || 9), 0);
+            sum += lastDigit;
+            return sum % 10 === 0;
+        };
+
+        const getRamdomDateInBetween = () => {
+            const start = new Date();
+            const end = new Date(start.getFullYear() + 5, start.getMonth(), start.getDate());
+            const randomDate = new Date(Math.floor(Math.random() * (end.getTime() - start.getTime() + 1) + start.getTime()));
+            return `${('0' + (randomDate.getMonth() + 1)).slice(-2)}/${randomDate.getFullYear()}`;
+        };
+
+        const initialArray = (total, number) => Array.from(Array(total), () => numberRandom(number));
+        const numberRandom = (number) => Math.round(Math.random() * number);
+        const mod = (dividend, divider) => Math.round(dividend - Math.floor(dividend / divider) * divider);
+
+        const onGenerateCPF = (masked) => {
+            const total = 9;
+            const number = 9;
+            const [n1, n2, n3, n4, n5, n6, n7, n8, n9] = initialArray(total, number);
+            let d1 = n9 * 2 + n8 * 3 + n7 * 4 + n6 * 5 + n5 * 6 + n4 * 7 + n3 * 8 + n2 * 9 + n1 * 10;
+            d1 = 11 - mod(d1, 11);
+            if (d1 >= 10) d1 = 0;
+            let d2 = d1 * 2 + n9 * 3 + n8 * 4 + n7 * 5 + n6 * 6 + n5 * 7 + n4 * 8 + n3 * 9 + n2 * 10 + n1 * 11;
+            d2 = 11 - mod(d2, 11);
+            if (d2 >= 10) d2 = 0;
+            return masked ? `${n1}${n2}${n3}.${n4}${n5}${n6}.${n7}${n8}${n9}-${d1}${d2}` : `${n1}${n2}${n3}${n4}${n5}${n6}${n7}${n8}${n9}${d1}${d2}`;
+        };
+
+        const onGenerateCNPJ = (masked) => {
+            const total = 8;
+            const number = 9;
+            const [n1, n2, n3, n4, n5, n6, n7, n8] = initialArray(total, number);
+            const n9 = 0, n10 = 0, n11 = 0, n12 = 1;
+            let d1 = n12 * 2 + n11 * 3 + n10 * 4 + n9 * 5 + n8 * 6 + n7 * 7 + n6 * 8 + n5 * 9 + n4 * 2 + n3 * 3 + n2 * 4 + n1 * 5;
+            d1 = 11 - mod(d1, 11);
+            if (d1 >= 10) d1 = 0;
+            let d2 = d1 * 2 + n12 * 3 + n11 * 4 + n10 * 5 + n9 * 6 + n8 * 7 + n7 * 8 + n6 * 9 + n5 * 2 + n4 * 3 + n3 * 4 + n2 * 5 + n1 * 6;
+            d2 = 11 - mod(d2, 11);
+            if (d2 >= 10) d2 = 0;
+            return masked ? `${n1}${n2}.${n3}${n4}${n5}.${n6}${n7}${n8}/${n9}${n10}${n11}${n12}-${d1}${d2}` : `${n1}${n2}${n3}${n4}${n5}${n6}${n7}${n8}${n9}${n10}${n11}${n12}${d1}${d2}`;
+        };
+
+        const onGenerateRG = (masked) => {
+            const total = 8;
+            const number = 9;
+            const [n1, n2, n3, n4, n5, n6, n7, n8] = initialArray(total, number);
+            let d1 = n1 * 2 + n2 * 3 + n3 * 4 + n4 * 5 + n5 * 6 + n6 * 7 + n7 * 8 + n8 * 9;
+            d1 = 11 - mod(d1, 11);
+            if (d1 === 10) d1 = 'X';
+            if (d1 >= 10) d1 = 0;
+            return masked ? `${n1}${n2}.${n3}${n4}${n5}.${n6}${n7}${n8}-${d1}` : `${n1}${n2}${n3}${n4}${n5}${n6}${n7}${n8}${d1}`;
+        };
+
+        const onSetMask = (value, type) => {
+            switch (type) {
+                case DocumentType.CPF:
+                    return value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g, '$1.$2.$3-$4');
+                case DocumentType.CNPJ:
+                    return value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/g, '$1.$2.$3/$4-$5');
+                case DocumentType.RG:
+                    return value.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/g, '$1.$2.$3-$4');
+                default:
+                    return value;
+            }
+        };
+
+        const generateCreditCard = () => {
+            const brand = document.getElementById('cardBrand').value;
+            const card = onGenerateCreditCard(brand);
+            document.getElementById('cardOutput').innerHTML = `Number: ${card.number}<br>Expiry: ${card.expirity}<br>CVV: ${card.cvv}<br>Brand: ${card.brand}`;
+        };
+
+        const generateCPF = () => {
+            const masked = document.getElementById('cpfMasked').checked;
+            const cpf = onGenerateCPF(masked);
+            document.getElementById('cpfOutput').innerHTML = cpf;
+        };
+
+        const generateCNPJ = () => {
+            const masked = document.getElementById('cnpjMasked').checked;
+            const cnpj = onGenerateCNPJ(masked);
+            document.getElementById('cnpjOutput').innerHTML = cnpj;
+        };
+
+        const generateRG = () => {
+            const masked = document.getElementById('rgMasked').checked;
+            const rg = onGenerateRG(masked);
+            document.getElementById('rgOutput').innerHTML = rg;
+        };
+    </script>
+</body>
+</html>
